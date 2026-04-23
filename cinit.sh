@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # cinit.sh
-# v0.1.5
+# v0.1.6
 #
 # Copyright © 2026 Simon Danielsson
 #
@@ -68,19 +68,19 @@ CR="\\033[0m"      # reset
 name="$name"
 
 build_release() {
-    printf "Compiling release build..."
+    printf "Compiling release build...\\n"
     cc -o ./tools/nob/nob ./tools/nob/nob.c
     ./tools/nob/nob release
     ./build/release/\$name
 }
 build_debug() {
-    printf "Compiling debug build..."
+    printf "Compiling debug build...\\n"
     cc -o ./tools/nob/nob ./tools/nob/nob.c
     ./tools/nob/nob debug
     ./build/debug/\$name
 }
 build_tests() {
-    printf "Compiling tests..."
+    printf "Compiling tests...\\n"
     cc -o ./tools/nob/nob ./tools/nob/nob.c
     ./tools/nob/nob test
     ./build/tests/\$name
