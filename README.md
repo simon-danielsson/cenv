@@ -3,12 +3,12 @@
 </h2>
   
 <p align="center">
-  <em>Tiny C project generator</em>
+  <em>Tiny C project generator and<br>development suite.</em>
 </p>
   
 <p align="center">
     <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="MIT License" />
-  <img src="https://img.shields.io/github/last-commit/simon-danielsson/jobb/main?style=flat-square&color=blue" alt="Last commit" />
+  <img src="https://img.shields.io/github/last-commit/simon-danielsson/cinit.sh/main?style=flat-square&color=blue" alt="Last commit" />
 </p>
   
 <p align="center">
