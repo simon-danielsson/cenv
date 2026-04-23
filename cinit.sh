@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # cinit.sh
-# v0.1.6
+# v0.1.7
 #
 # Copyright © 2026 Simon Danielsson
 #
@@ -124,29 +124,35 @@ help() {
     printf "\\n"
 }
 
-case "\$1" in
-  release)
-    build_release
-    ;;
-  debug)
-    build_debug
-    ;;
-  test)
-    build_tests
-    ;;
-  help)
-    help
-    ;;
-  todo)
-    todo
-    ;;
-  doc)
-    doc
-    ;;
-  *)
-    build_debug
-    ;;
-esac
+if [ -z "\$1" ]; then
+    # if no arguments
+  build_debug
+else
+  case "\$1" in
+    release)
+      build_release
+      ;;
+    debug)
+      build_debug
+      ;;
+    test)
+      build_tests
+      ;;
+    help)
+      help
+      ;;
+    todo)
+      todo
+      ;;
+    doc)
+      doc
+      ;;
+    *)
+      echo "Error: unknown argument '\$1'"
+      exit 1
+      ;;
+  esac
+fi
 
 EOF
 
