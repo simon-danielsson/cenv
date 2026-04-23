@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # cinit.sh
-# v0.2.0
+# v0.2.1
 #
 # Copyright © 2026 Simon Danielsson
 #
@@ -66,7 +66,9 @@ col_flag="\\033[1;31m"   # bold red
 CR="\\033[0m"      # reset
 
 name="$name"
-c_version="gnu17"
+c_standard="gnu17"
+
+latest_git_commit=\$(git log -1 --format='%ad' --date=format:'%a %d %b %Y')
 
 get_version() {
     git describe --tags --abbrev=0 2>/dev/null || echo "v0.1.0"
@@ -76,7 +78,7 @@ VERSION="\$(get_version)"
 build_release() {
     printf "Compiling release build (%s)...\\n" "\$VERSION"
     cc -o ./tools/nob/nob ./tools/nob/nob.c
-    APP_VERSION="\$VERSION" ./tools/nob/nob release -std=\$c_version
+    APP_VERSION="\$VERSION" ./tools/nob/nob release -std=\$c_standard
     mv ./build/release/main ./build/release/\$name-\$VERSION
     ./build/release/\$name-\$VERSION
 }
@@ -84,7 +86,7 @@ build_release() {
 build_debug() {
     printf "Compiling debug build (%s)...\n" "\$VERSION"
     cc -o ./tools/nob/nob ./tools/nob/nob.c
-    APP_VERSION="\$VERSION" ./tools/nob/nob debug -std=\$c_version
+    APP_VERSION="\$VERSION" ./tools/nob/nob debug -std=\$c_standard
     mv ./build/debug/main ./build/debug/\$name-DEBUG-\$VERSION
     ./build/debug/\$name-DEBUG-\$VERSION
 }
@@ -92,7 +94,7 @@ build_debug() {
 build_tests() {
     printf "Compiling tests (%s)...\n" "\$VERSION"
     cc -o ./tools/nob/nob ./tools/nob/nob.c
-    APP_VERSION="\$VERSION" ./tools/nob/nob test -std=\$c_version
+    APP_VERSION="\$VERSION" ./tools/nob/nob test -std=\$c_standard
     mv ./build/tests/main ./build/tests/\$name-TEST-\$VERSION
     ./build/tests/\$name-TEST-\$VERSION
 }
@@ -108,9 +110,11 @@ doc() {
 
 help() {
     printf "\\n"
-    printf "Project    : \$name\\n"
-    printf "Version    : \$VERSION\\n"
-    printf "C Standard : \$c_version\\n"
+    printf "Project name     :  \$name\\n"
+    printf "Current version  :  \$VERSION\\n"
+    printf "Latest commit    :  \$latest_git_commit\\n"
+    printf "First created    :  \$(date +"%a %d %b %Y")\\n"
+    printf "C Standard       :  \$c_standard\\n"
     printf "\\n"
     printf "║ \${col_cmd}run \${col_flag}debug\${CR}\\n"
     printf "║ compile into and run from './build/debug' with debug options\\n"
