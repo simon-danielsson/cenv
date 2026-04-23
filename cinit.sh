@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # cinit.sh
-# v0.1.0
+# v0.1.5
 #
 # Copyright © 2026 Simon Danielsson
 #
@@ -55,22 +55,40 @@ cat > "$target_dir/run" <<EOF
 SCRIPT_DIR="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
 cd "\$SCRIPT_DIR"
 
-C1="\\033[1;34m"   # bold blue
-C2="\\033[1;33m"   # bold yellow
+mkdir -p build
+mkdir -p build/release
+mkdir -p build/debug
+mkdir -p build/tests
+
+col_cmd="\\033[1;34m"   # bold blue
+col_subc="\\033[1;33m"   # bold yellow
+col_flag="\\033[1;31m"   # bold red
 CR="\\033[0m"      # reset
 
-build() {
-    mkdir -p build
-    cc -o ./tools/nob/nob ./tools/nob/nob.c
-    ./tools/nob/nob
-}
+name="$name"
 
-run() {
-    ./build/$name
+build_release() {
+    printf "Compiling release build..."
+    cc -o ./tools/nob/nob ./tools/nob/nob.c
+    ./tools/nob/nob release
+    ./build/release/\$name
+}
+build_debug() {
+    printf "Compiling debug build..."
+    cc -o ./tools/nob/nob ./tools/nob/nob.c
+    ./tools/nob/nob debug
+    ./build/debug/\$name
+}
+build_tests() {
+    printf "Compiling tests..."
+    cc -o ./tools/nob/nob ./tools/nob/nob.c
+    ./tools/nob/nob test
+    ./build/tests/\$name
 }
 
 todo() {
     ./tools/jobb/jobb ./src
+    ./tools/jobb/jobb ./tests
 }
 
 doc() {
@@ -79,32 +97,42 @@ doc() {
 
 help() {
     printf "\\n"
-    printf "\${C1}run\${CR}\\n"
-    printf ": build project and run binary\\n"
+    printf "\${col_cmd}run \${col_flag}debug\${CR}\\n"
+    printf ": compile into and run from './build/debug' with debug options\\n"
+    printf ": if the 'run' command is ran without flags, it defaults to the debug build\\n"
 
-    printf "\${C1}run \${C2}build\${CR}\\n"
-    printf ": build project\\n"
+    printf "\\n"
+    printf "\${col_cmd}run \${col_flag}release\${CR}\\n"
+    printf ": compile into and run from './build/release' with optimizations\\n"
 
-    printf "\${C1}run \${C2}run\${CR}\\n"
-    printf ": run binary\\n"
+    printf "\\n"
+    printf "\${col_cmd}run \${col_flag}test\${CR}\\n"
+    printf ": compiles into and run './build/tests' directory with debug options\\n"
+    printf ": the source folder used for this command is './tests'\\n"
 
-    printf "\${C1}run \${C2}doc\${CR}\\n"
-    printf ": (via ./tools/cdok) generate docs and open in browser\\n"
+    printf "\\n"
+    printf "\${col_cmd}run \${col_subc}doc\${CR}\\n"
+    printf ": (via ./tools/cdok) auto-generate docs from './src' and open in browser\\n"
 
-    printf "\${C1}run \${C2}todo\${CR}\\n"
-    printf ": (via ./tools/jobb) find todo statements in codebase\\n"
+    printf "\\n"
+    printf "\${col_cmd}run \${col_subc}todo\${CR}\\n"
+    printf ": (via ./tools/jobb) find 'TODO' statements in codebase\\n"
 
-    printf "\${C1}run \${C2}help\${CR}\\n"
+    printf "\\n"
+    printf "\${col_cmd}run \${col_subc}help\${CR}\\n"
     printf ": display help\\n"
     printf "\\n"
 }
 
 case "\$1" in
-  build)
-    build
+  release)
+    build_release
     ;;
-  run)
-    run
+  debug)
+    build_debug
+    ;;
+  test)
+    build_tests
     ;;
   help)
     help
@@ -116,10 +144,11 @@ case "\$1" in
     doc
     ;;
   *)
-    build
+    build_release
     run
     ;;
 esac
+
 EOF
 
 # make dev executable
@@ -140,6 +169,7 @@ mkdir
 # generate nob.c
 touch "$target_dir/tools/nob/nob.c"
 cat > "$target_dir/tools/nob/nob.c" <<EOF
+
 #define NOB_IMPLEMENTATION
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 
@@ -148,8 +178,11 @@ cat > "$target_dir/tools/nob/nob.c" <<EOF
 #include <string.h>
 
 #define BINARY_NAME "$name"
-#define BUILD_FOLDER "./build/"
+#define RELEASE_FOLDER "./build/release/"
+#define DEBUG_FOLDER "./build/debug/"
+#define TEST_FOLDER "./build/tests/"
 #define SRC_FOLDER "./src"
+#define TEST_SRC_FOLDER "./tests"
 
 typedef struct {
     char **items;
@@ -185,14 +218,55 @@ static bool collect_files(Nob_Walk_Entry entry) {
 int main(int argc, char **argv) {
     NOB_GO_REBUILD_URSELF(argc, argv);
 
+    bool debug = false;
+    bool release = false;
+    bool test = false;
+
+    for (int i = 1; i < argc; ++i) {
+        if (strcmp(argv[i], "debug") == 0) {
+            debug = true;
+        } else if (strcmp(argv[i], "release") == 0) {
+            release = true;
+        } else if (strcmp(argv[i], "test") == 0) {
+            test = true;
+        } else {
+            nob_log(NOB_ERROR, "Unknown option: %s", argv[i]);
+            return 1;
+        }
+    }
+
     Nob_Cmd cmd = {0};
 
     nob_cc(&cmd);
     nob_cc_flags(&cmd);
-    nob_cmd_append(&cmd, "-o", BUILD_FOLDER BINARY_NAME);
+
+    if (debug || test) {
+        nob_cmd_append(&cmd, "-g", "-O0", "-DDEBUG", "-fsanitize=address",
+                "-Wall", "-Wextra", "-Wpedantic",
+                "-Wshadow", "-Werror=format-security");
+    }
+
+    if (debug) {
+        nob_cmd_append(&cmd, "-o", DEBUG_FOLDER BINARY_NAME);
+    }
+
+    if (test) {
+        nob_cmd_append(&cmd, "-o", TEST_FOLDER BINARY_NAME);
+    }
+
+    if (release) {
+        nob_cmd_append(&cmd, "-O2", "-DNDEBUG", "-Wextra");
+        nob_cmd_append(&cmd, "-o", RELEASE_FOLDER BINARY_NAME);
+    }
 
     Path_List files = {0};
-    nob_walk_dir(SRC_FOLDER, collect_files, &files);
+    if (test) {
+        nob_walk_dir(TEST_SRC_FOLDER, collect_files, &files);
+    }
+
+    if (debug || release) {
+        nob_walk_dir(SRC_FOLDER, collect_files, &files);
+    }
 
     for (size_t i = 0; i < files.count; i++) {
         nob_cmd_append(&cmd, files.items[i]);
@@ -255,8 +329,20 @@ cat > "$target_dir/src/main.c" <<EOF
 #include "main.h"
 
 // TODO: write a program
-int main() {
+int main(void) {
     printf("Hello world!");
+    return 0;
+}
+EOF
+
+# generate tests folder
+mkdir -p "$target_dir/tests"; touch "$target_dir/tests/test_main.c"
+cat > "$target_dir/tests/test_main.c" <<EOF
+#include "../src/main.h"
+
+// TODO: write a test
+int main(void) {
+    printf("this is a test");
     return 0;
 }
 EOF
