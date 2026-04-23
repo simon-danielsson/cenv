@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # cinit.sh
-# v0.2.1
+# v0.2.2
 #
 # Copyright © 2026 Simon Danielsson
 #
@@ -60,6 +60,7 @@ mkdir -p build/release
 mkdir -p build/debug
 mkdir -p build/tests
 
+col_scs="\\033[1;32m"   # bold green
 col_cmd="\\033[1;34m"   # bold blue
 col_subc="\\033[1;33m"   # bold yellow
 col_flag="\\033[1;31m"   # bold red
@@ -99,9 +100,52 @@ build_tests() {
     ./build/tests/\$name-TEST-\$VERSION
 }
 
+tag() {
+    if [ -z "\$1" ]; then
+        echo "Usage: tag <version>"
+        return 1
+    fi
+    git tag -a "\$1" -m "\$1"
+}
+
 todo() {
     ./tools/jobb/jobb ./src
     ./tools/jobb/jobb ./tests
+}
+
+update() {
+    # update nob.h
+    cd "./tools/nob"
+    mv nob.h nob.h.bak
+    printf "\\nFetching latest version of nob.h...\\n"
+    curl -O https://raw.githubusercontent.com/tsoding/nob.h/refs/heads/main/nob.h || {
+        error "Failed to curl nob.h from the nob.h github repo"
+    }
+    if [ -f "nob.h" ]; then
+        rm nob.h.bak
+        printf "\\n\${col_scs}'nob.h' was updated successfully!\${CR}\\n"
+    else
+        mv nob.h.bak nob.h
+        printf "\\n\${col_scs}'nob.h' couldn't be updated!\${CR}\\n"
+    fi
+    cd ../..
+
+    # update analib.h
+    cd "./src/libs"
+    mv analib.h analib.h.bak
+    printf "\\nFetching latest version of analib.h...\\n"
+    curl -O https://raw.githubusercontent.com/simon-danielsson/analib.h/refs/heads/main/analib.h || {
+        error "Failed to curl analib.h from the analib.h github repo"
+    }
+    if [ -f "analib.h" ]; then
+        rm analib.h.bak
+        printf "\\n\${col_scs}'analib.h' was updated successfully!\${CR}\\n"
+    else
+        mv analib.h.bak analib.h
+        printf "\\n\${col_scs}'analib.h' couldn't be updated!\${CR}\\n"
+    fi
+    cd ../..
+
 }
 
 doc() {
@@ -130,12 +174,21 @@ help() {
     printf "║ the source folder used for this command is './tests'\\n"
 
     printf "\\n"
+    printf "║ \${col_cmd}run \${col_subc}tag <version>\${CR}\\n"
+    printf "║ (git) create new annotated tag\\n"
+    printf "║ ex.: run tag v1.2.1\\n"
+
+    printf "\\n"
     printf "║ \${col_cmd}run \${col_subc}doc\${CR}\\n"
-    printf "║ (via ./tools/cdok) auto-generate docs from './src' and open in browser\\n"
+    printf "║ (./tools/cdok) auto-generate docs from './src' and open in browser\\n"
+
+    printf "\\n"
+    printf "║ \${col_cmd}run \${col_subc}update\${CR}\\n"
+    printf "║ update libraries and tools\\n"
 
     printf "\\n"
     printf "║ \${col_cmd}run \${col_subc}todo\${CR}\\n"
-    printf "║ (via ./tools/jobb) find 'TODO' statements in codebase\\n"
+    printf "║ (./tools/jobb) find 'TODO' statements in codebase\\n"
 
     printf "\\n"
     printf "║ \${col_cmd}run \${col_subc}help\${CR}\\n"
@@ -163,8 +216,14 @@ else
     todo)
       todo
       ;;
+    tag)
+      tag "\$2"
+      ;;
     doc)
       doc
+      ;;
+    update)
+      update
       ;;
     *)
       echo "Error: unknown argument '\$1'"
