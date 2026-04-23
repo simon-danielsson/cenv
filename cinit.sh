@@ -85,7 +85,7 @@ build_debug() {
     cc -o ./tools/nob/nob ./tools/nob/nob.c
     APP_VERSION="\$VERSION" ./tools/nob/nob debug
     mv ./build/debug/main ./build/debug/\$name-DEBUG-\$VERSION
-    ./build/release/\$name-DEBUG-\$VERSION
+    ./build/debug/\$name-DEBUG-\$VERSION
 }
 
 build_tests() {
