@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # cinit.sh
-# v0.1.7
+# v0.1.8
 #
 # Copyright © 2026 Simon Danielsson
 #
@@ -67,23 +67,33 @@ CR="\\033[0m"      # reset
 
 name="$name"
 
+get_version() {
+    git describe --tags --abbrev=0 2>/dev/null || echo "v0.1.0"
+}
+VERSION="\$(get_version)"
+
 build_release() {
-    printf "Compiling release build...\\n"
+    printf "Compiling release build (%s)...\\n" "\$VERSION"
     cc -o ./tools/nob/nob ./tools/nob/nob.c
-    ./tools/nob/nob release
-    ./build/release/\$name
+    APP_VERSION="\$VERSION" ./tools/nob/nob release
+    mv ./build/release/main ./build/release/\$name-\$VERSION
+    ./build/release/\$name-\$VERSION
 }
+
 build_debug() {
-    printf "Compiling debug build...\\n"
+    printf "Compiling debug build (%s)...\n" "\$VERSION"
     cc -o ./tools/nob/nob ./tools/nob/nob.c
-    ./tools/nob/nob debug
-    ./build/debug/\$name
+    APP_VERSION="\$VERSION" ./tools/nob/nob debug
+    mv ./build/debug/main ./build/debug/\$name-DEBUG-\$VERSION
+    ./build/release/\$name-\$VERSION
 }
+
 build_tests() {
-    printf "Compiling tests...\\n"
+    printf "Compiling tests (%s)...\n" "\$VERSION"
     cc -o ./tools/nob/nob ./tools/nob/nob.c
-    ./tools/nob/nob test
-    ./build/tests/\$name
+    APP_VERSION="\$VERSION" ./tools/nob/nob test
+    mv ./build/tests/main ./build/tests/\$name-TEST-\$VERSION
+    ./build/tests/\$name-TEST-\$VERSION
 }
 
 todo() {
@@ -96,6 +106,7 @@ doc() {
 }
 
 help() {
+    printf "Project: \$name\\nVersion: \$VERSION\\n"
     printf "\\n"
     printf "\${col_cmd}run \${col_flag}debug\${CR}\\n"
     printf ": compile into and run from './build/debug' with debug options\\n"
@@ -182,7 +193,7 @@ cat > "$target_dir/tools/nob/nob.c" <<EOF
 #include <stdlib.h>
 #include <string.h>
 
-#define BINARY_NAME "$name"
+#define BINARY_NAME "main"
 #define RELEASE_FOLDER "./build/release/"
 #define DEBUG_FOLDER "./build/debug/"
 #define TEST_FOLDER "./build/tests/"
@@ -377,6 +388,7 @@ EOF
 git init -b main
 git add --all
 git commit -m "init"
+git tag v0.1.0
 
 col_grn="\\033[1;32m"   # bold blue
 col_rst="\\033[0m"      # reset
