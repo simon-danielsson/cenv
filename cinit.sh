@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # cinit.sh
-# v0.2.2
+# v0.2.3
 #
 # Copyright © 2026 Simon Danielsson
 #
@@ -68,6 +68,7 @@ CR="\\033[0m"      # reset
 
 name="$name"
 c_standard="gnu17"
+current_date=\$(date +"%F")
 
 latest_git_commit=\$(git log -1 --format='%ad' --date=format:'%a %d %b %Y')
 
@@ -114,6 +115,23 @@ todo() {
 }
 
 update() {
+# update jobb
+    root_dir=\$(pwd)
+    cd "./tools"
+    rm -rf jobb
+    git clone https://github.com/simon-danielsson/jobb
+    cd jobb
+    ./dev compile
+    mv ./build/main ..
+    cd \$root_dir/tools
+    zip -r jobb.zip jobb
+    rm -rf jobb
+    mkdir -p jobb
+    mv main ./jobb/jobb
+    mv jobb.zip ./jobb/jobb-src_\$current_date.zip
+    printf "\\n\${col_scs}'jobb' was updated successfully!\${CR}\\n"
+    cd \$root_dir
+
     # update nob.h
     cd "./tools/nob"
     mv nob.h nob.h.bak
@@ -128,7 +146,7 @@ update() {
         mv nob.h.bak nob.h
         printf "\\n\${col_scs}'nob.h' couldn't be updated!\${CR}\\n"
     fi
-    cd ../..
+    cd \$root_dir
 
     # update analib.h
     cd "./src/libs"
@@ -144,7 +162,7 @@ update() {
         mv analib.h.bak analib.h
         printf "\\n\${col_scs}'analib.h' couldn't be updated!\${CR}\\n"
     fi
-    cd ../..
+    cd \$root_dir
 
 }
 
@@ -376,7 +394,7 @@ curl -O https://raw.githubusercontent.com/simon-danielsson/analib.h/refs/heads/m
     error "Failed to curl analib.h from the analib.h github repo"
 }
 
-# get latest version of analib.h from repo
+# get latest version of jobb from repo
 cd "$target_dir/tools"
 git clone https://github.com/simon-danielsson/jobb
 cd jobb
