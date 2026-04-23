@@ -67,7 +67,7 @@ col_flag="\\033[1;31m"   # bold red
 CR="\\033[0m"      # reset
 
 name="$name"
-c_standard="gnu17"
+c_standard="gnu23"
 current_date=\$(date +"%F")
 
 latest_git_commit=\$(git log -1 --format='%ad' --date=format:'%a %d %b %Y')
