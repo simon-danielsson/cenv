@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # cinit.sh
-# v0.1.8
+# v0.1.9
 #
 # Copyright © 2026 Simon Danielsson
 #
@@ -85,7 +85,7 @@ build_debug() {
     cc -o ./tools/nob/nob ./tools/nob/nob.c
     APP_VERSION="\$VERSION" ./tools/nob/nob debug
     mv ./build/debug/main ./build/debug/\$name-DEBUG-\$VERSION
-    ./build/release/\$name-\$VERSION
+    ./build/release/\$name-DEBUG-\$VERSION
 }
 
 build_tests() {
