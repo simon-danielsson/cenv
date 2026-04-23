@@ -39,7 +39,10 @@ Add cinit.sh as an alias in your `.bashrc`:
   
 ``` bash
 # ~/.bashrc
-alias cinit="~/dev/bash/cinit/cinit.sh"
+alias cinit="$HOME/path/to/cinit.sh"
+
+# terminal
+source ~/.bashrc
 ```
   
 Run in your destination folder with the project name as an argument.  
