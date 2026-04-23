@@ -39,7 +39,6 @@ fi
 
 name="$1"
 target_dir="$(pwd -P)/$name"
-display_dir="$(printf '%s\n' "$target_dir" | sed "s#^$HOME#~#")"
 current_date=$(date +"%F")
 
 if [ -e "$target_dir" ]; then
@@ -105,7 +104,6 @@ case "\$1" in
     build
     ;;
   run)
-    build
     run
     ;;
   help)
@@ -293,5 +291,5 @@ col_grn="\\033[1;32m"   # bold blue
 col_rst="\\033[0m"      # reset
 
 printf "\n${col_grn}Project \"$name\" was generated successfully!${col_rst}\n"
-printf "\nTo get started, run the following commands:\ncd $display_dir\nrun help\n"
+printf "\nTo get started, run the following commands:\ncd $name\nrun help\n"
 
