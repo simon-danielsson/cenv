@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # cinit.sh
-# v0.2.3
+# v0.2.4
 #
 # Copyright © 2026 Simon Danielsson
 #
@@ -63,6 +63,7 @@ mkdir -p build/tests
 col_scs="\\033[1;32m"   # bold green
 col_cmd="\\033[1;34m"   # bold blue
 col_subc="\\033[1;33m"   # bold yellow
+col_git="\\033[1;36m"   # bold cyan
 col_flag="\\033[1;31m"   # bold red
 CR="\\033[0m"      # reset
 
@@ -114,8 +115,26 @@ todo() {
     ./tools/jobb/jobb ./tests
 }
 
+update_helper_only_lib() {
+    lib_name="\$1"; lib_path="\$2"; lib_repo_raw="\$3"; root=\$(pwd)
+    cd "\$lib_path"
+    mv \$lib_name \$lib_name.bak
+    printf "\\nFetching latest version of \$lib_name...\\n"
+    curl -O \$lib_repo_raw || {
+        error "Failed to curl \$lib_name from the \$lib_name github repo"
+    }
+    if [ -f "\$lib_name" ]; then
+        rm \$lib_name.bak
+        printf "\\n\${col_scs}'\$lib_name' was updated successfully!\${CR}\\n"
+    else
+        mv \$lib_name.bak \$lib_name
+        printf "\\n\${col_flag}'\$lib_name' couldn't be updated!\${CR}\\n"
+    fi
+    cd \$root
+}
+
 update() {
-# update jobb
+    # update jobb
     root_dir=\$(pwd)
     cd "./tools"
     rm -rf jobb
@@ -132,42 +151,18 @@ update() {
     printf "\\n\${col_scs}'jobb' was updated successfully!\${CR}\\n"
     cd \$root_dir
 
-    # update nob.h
-    cd "./tools/nob"
-    mv nob.h nob.h.bak
-    printf "\\nFetching latest version of nob.h...\\n"
-    curl -O https://raw.githubusercontent.com/tsoding/nob.h/refs/heads/main/nob.h || {
-        error "Failed to curl nob.h from the nob.h github repo"
-    }
-    if [ -f "nob.h" ]; then
-        rm nob.h.bak
-        printf "\\n\${col_scs}'nob.h' was updated successfully!\${CR}\\n"
-    else
-        mv nob.h.bak nob.h
-        printf "\\n\${col_scs}'nob.h' couldn't be updated!\${CR}\\n"
-    fi
-    cd \$root_dir
-
-    # update analib.h
-    cd "./src/libs"
-    mv analib.h analib.h.bak
-    printf "\\nFetching latest version of analib.h...\\n"
-    curl -O https://raw.githubusercontent.com/simon-danielsson/analib.h/refs/heads/main/analib.h || {
-        error "Failed to curl analib.h from the analib.h github repo"
-    }
-    if [ -f "analib.h" ]; then
-        rm analib.h.bak
-        printf "\\n\${col_scs}'analib.h' was updated successfully!\${CR}\\n"
-    else
-        mv analib.h.bak analib.h
-        printf "\\n\${col_scs}'analib.h' couldn't be updated!\${CR}\\n"
-    fi
-    cd \$root_dir
-
+    update_helper_only_lib "stb_sprintf.h" "./libs" "https://raw.githubusercontent.com/nothings/stb/refs/heads/master/stb_sprintf.h"
+    update_helper_only_lib "analib.h" "./libs" "https://raw.githubusercontent.com/simon-danielsson/analib.h/refs/heads/main/analib.h"
+    update_helper_only_lib "nob.h" "./tools/nob" "https://raw.githubusercontent.com/tsoding/nob.h/refs/heads/main/nob.h"
 }
 
 doc() {
     ./tools/cdok/cdok ./src
+}
+
+restore() {
+    git reset --hard HEAD
+    git clean -fd
 }
 
 help() {
@@ -177,40 +172,31 @@ help() {
     printf "Latest commit    :  \$latest_git_commit\\n"
     printf "First created    :  \$(date +"%a %d %b %Y")\\n"
     printf "C Standard       :  \$c_standard\\n"
-    printf "\\n"
-    printf "║ \${col_cmd}run \${col_flag}debug\${CR}\\n"
-    printf "║ compile into and run from './build/debug' with debug options\\n"
-    printf "║ if the 'run' command is ran without flags, it defaults to the debug build\\n"
 
     printf "\\n"
-    printf "║ \${col_cmd}run \${col_flag}release\${CR}\\n"
-    printf "║ compile into and run from './build/release' with optimizations\\n"
-
+    printf "\${col_cmd}run \${col_flag}debug\${CR}\\n"
+    printf "│ compile into and run from './build/debug' with debug options\\n"
+    printf "╰ if the 'run' command is ran without flags, it defaults to the debug build\\n"
+    printf "\${col_cmd}run \${col_flag}release\${CR}\\n"
+    printf "╰ compile into and run from './build/release' with optimizations\\n"
+    printf "\${col_cmd}run \${col_flag}test\${CR}\\n"
+    printf "│ compile into and run './build/tests' directory with debug options\\n"
+    printf "╰ the source folder used for this command is './tests'\\n"
     printf "\\n"
-    printf "║ \${col_cmd}run \${col_flag}test\${CR}\\n"
-    printf "║ compile into and run './build/tests' directory with debug options\\n"
-    printf "║ the source folder used for this command is './tests'\\n"
-
+    printf "\${col_cmd}run \${col_subc}doc\${CR}\\n"
+    printf "╰ (./tools/cdok) auto-generate docs from './src' and open in browser\\n"
+    printf "\${col_cmd}run \${col_subc}todo\${CR}\\n"
+    printf "╰ (./tools/jobb) find 'TODO' statements in codebase\\n"
+    printf "\${col_cmd}run \${col_subc}update\${CR}\\n"
+    printf "╰ update libraries and tools\\n"
+    printf "\${col_cmd}run \${col_subc}help\${CR}\\n"
+    printf "╰ display help\\n"
     printf "\\n"
-    printf "║ \${col_cmd}run \${col_subc}tag <version>\${CR}\\n"
-    printf "║ (git) create new annotated tag\\n"
-    printf "║ ex.: run tag v1.2.1\\n"
-
-    printf "\\n"
-    printf "║ \${col_cmd}run \${col_subc}doc\${CR}\\n"
-    printf "║ (./tools/cdok) auto-generate docs from './src' and open in browser\\n"
-
-    printf "\\n"
-    printf "║ \${col_cmd}run \${col_subc}update\${CR}\\n"
-    printf "║ update libraries and tools\\n"
-
-    printf "\\n"
-    printf "║ \${col_cmd}run \${col_subc}todo\${CR}\\n"
-    printf "║ (./tools/jobb) find 'TODO' statements in codebase\\n"
-
-    printf "\\n"
-    printf "║ \${col_cmd}run \${col_subc}help\${CR}\\n"
-    printf "║ display help\\n"
+    printf "\${col_cmd}run \${col_git}restore\${CR}\\n"
+    printf "╰ (git) force hard restore to latest commit\\n"
+    printf "\${col_cmd}run \${col_git}tag <version>\${CR}\\n"
+    printf "│ (git) create new annotated tag\\n"
+    printf "╰ ex.: run tag v1.2.1\\n"
     printf "\\n"
 }
 
@@ -240,9 +226,26 @@ else
     doc)
       doc
       ;;
-    update)
-      update
+    restore)
+      restore
       ;;
+    update)
+      printf "\\n\${col_flag}You're about to run an update which can break\\n"
+      printf "your setup or introduce unwanted changes!\\n"
+      printf "Make a commit to git before continuing.\${CR}\\n\\n"
+      printf "Are you sure you want to run an update?\\n[y/n]: "
+      read -r confirm
+
+      case "\$confirm" in
+        [yY]|[yY][eE][sS])
+          update
+          ;;
+        *)
+          echo "Update cancelled."
+          ;;
+      esac
+      ;;
+
     *)
       echo "Error: unknown argument '\$1'"
       exit 1
@@ -389,13 +392,18 @@ int main(int argc, char **argv) {
 EOF
 
 # get latest version of analib.h from repo
-mkdir -p "$target_dir/src/libs"; cd "$target_dir/src/libs"
+mkdir -p "$target_dir/libs"; cd "$target_dir/libs"
 curl -O https://raw.githubusercontent.com/simon-danielsson/analib.h/refs/heads/main/analib.h || {
-    error "Failed to curl analib.h from the analib.h github repo"
+    error "Failed to curl from the analib.h github repo"
+}
+
+# get latest version of stb_sprintf.h from repo
+mkdir -p "$target_dir/libs"; cd "$target_dir/libs"
+curl -O https://raw.githubusercontent.com/nothings/stb/refs/heads/master/stb_sprintf.h || {
+    error "Failed to curl from the stb_sprintf.h github repo"
 }
 
 # get latest version of cdok from repo
-
 cd "$target_dir/tools"
 git clone https://github.com/simon-danielsson/cdok
 cd cdok
@@ -430,11 +438,16 @@ cat > "$target_dir/src/main.h" <<EOF
 #define PRG_L "Copyright © $(date +"%Y") Simon Danielsson"
 #define PRG_R "https://github.com/simon-danielsson/$name"
 
-// global includes
+// libraries
 #define ANALIB_IMPLEMENTATION
-#include "./libs/analib.h"
+#include "../libs/analib.h"
+#define STB_SPRINTF_IMPLEMENTATION
+#include "../libs/stb_sprintf.h"
+
+// standard libraries
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdbool.h>
 
 // diagnostics
