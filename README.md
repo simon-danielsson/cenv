@@ -22,7 +22,7 @@
 
 ## Info
   
-cinit.sh follows the philosophy that everything one needs to build and maintain a C project should exist within the codebase itself. There are no extra dependencies you need to install to use this script - the only prerequisite is an up-to-date C compiler. The catalyst for this project was [nob.h](https://github.com/tsoding/nob.h), which cinit.sh and my entire C development workflow is based around.
+cinit.sh follows the philosophy that everything one needs to build and maintain a C project should exist within the codebase itself. There are no extra dependencies you need to install to use this script - the only prerequisites is git, curl and an up-to-date C compiler. The catalyst for this project was [nob.h](https://github.com/tsoding/nob.h), which cinit.sh and my entire C development workflow is based around.
   
 > [!IMPORTANT]  
 > 1. cinit.sh is heavily opinionated and built only for myself. I can't
