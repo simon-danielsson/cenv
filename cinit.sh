@@ -208,7 +208,8 @@ help() {
     printf "╰ the source folder used for this command is './tests'\\n"
     printf "\\n"
     printf "\${col_cmd}run \${col_subc}doc\${CR}\\n"
-    printf "╰ (./tools/cdok) auto-generate docs from './src' and open in browser\\n"
+    printf "│ (./tools/cdok) auto-generate docs from './src' and open in browser\\n"
+    printf "╰ not implemented yet...\\n"
     printf "\${col_cmd}run \${col_subc}todo\${CR}\\n"
     printf "╰ (./tools/jobb) find 'TODO' statements in codebase\\n"
     printf "\${col_cmd}run \${col_subc}update\${CR}\\n"
@@ -428,17 +429,17 @@ curl -O https://raw.githubusercontent.com/nothings/stb/refs/heads/master/stb_spr
 }
 
 # get latest version of cdok from repo
-cd "$target_dir/tools"
-git clone https://github.com/simon-danielsson/cdok
-cd cdok
-./run release
-mv ./build/release/cdok $target_dir/tools/main
-cd "$target_dir/tools"
-zip -r cdok.zip cdok
-rm -rf cdok
-mkdir -p cdok
-mv main ./cdok/cdok
-mv cdok.zip ./cdok/cdok-src_$current_date.zip
+# cd "$target_dir/tools"
+# git clone https://github.com/simon-danielsson/cdok
+# cd cdok
+# ./run release
+# mv ./build/release/cdok $target_dir/tools/main
+# cd "$target_dir/tools"
+# zip -r cdok.zip cdok
+# rm -rf cdok
+# mkdir -p cdok
+# mv main ./cdok/cdok
+# mv cdok.zip ./cdok/cdok-src_$current_date.zip
 
 # get latest version of jobb from repo
 cd "$target_dir/tools"
