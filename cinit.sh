@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # cinit.sh
-  cinit_v="v0.2.6"
+  cinit_v="v0.2.7"
 #
 # Copyright © 2026 Simon Danielsson
 #
@@ -51,9 +51,8 @@ mkdir -p "$target_dir"
 touch "$target_dir/run"
 cat > "$target_dir/run" <<EOF
 #!/usr/bin/env bash
-# https://github.com/simon-danielsson/cinit.sh
-#
-# cinit.sh
+# =============================================================================
+# CINIT.SH (https://github.com/simon-danielsson/cinit.sh)
 # $cinit_v
 #
 # Copyright © 2026 Simon Danielsson
@@ -76,6 +75,18 @@ cat > "$target_dir/run" <<EOF
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
+# =============================================================================
+# ENVIRONMENT VARIABLES (avoid spaces inside values)
+
+project_name="$name"
+project_repo="https://github.com/simon-danielsson/\$project_name"
+author="Simon_Danielsson"
+author_contact="contact@simondanielsson.se"
+c_standard="gnu23"
+
+# =============================================================================
+# CODE
+
 SCRIPT_DIR="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
 cd "\$SCRIPT_DIR"
 
@@ -91,39 +102,55 @@ col_git="\\033[1;36m"   # bold cyan
 col_flag="\\033[1;31m"   # bold red
 CR="\\033[0m"      # reset
 
-name="$name"
-c_standard="gnu23"
 current_date=\$(date +"%F")
 
 latest_git_commit=\$(git log -1 --format='%ad' --date=format:'%d %b %Y')
+if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+    git_head_hash_short=\$(git rev-parse --short HEAD)
+    git_head_hash_long=\$(git rev-parse HEAD)
+else
+    git_head_hash_short="nogit"
+    git_head_hash_long="0.0.0"
+fi
 
 get_version() {
     git describe --tags --abbrev=0 2>/dev/null || echo "v0.1.0"
 }
 VERSION="\$(get_version)"
 
+nob_extra_flags=(
+  "-DENV_GITHASH=\"\${git_head_hash_long}\""
+  "-DENV_GITVERSION=\"\${VERSION}\""
+  "-DENV_NAME=\"\${project_name}\""
+  "-DENV_AUTHOR=\"\${author}\""
+  "-DENV_CONTACT=\"\${author_contact}\""
+  "-DENV_REPO=\"\${project_repo}\""
+  "-std=\${c_standard}"
+)
+
 build_release() {
     printf "Compiling release build (%s)...\\n" "\$VERSION"
     cc -o ./tools/nob/nob ./tools/nob/nob.c
-    APP_VERSION="\$VERSION" ./tools/nob/nob release -std=\$c_standard
-    mv ./build/release/main ./build/release/\$name-\$VERSION
-    ./build/release/\$name-\$VERSION
+    APP_VERSION="\$VERSION" ./tools/nob/nob release \${nob_extra_flags[*]}
+    mv ./build/release/main ./build/release/\$project_name-\$VERSION-\$git_head_hash_short
+    ./build/release/\$project_name-\$VERSION-\$git_head_hash_short
 }
 
 build_debug() {
     printf "Compiling debug build (%s)...\n" "\$VERSION"
     cc -o ./tools/nob/nob ./tools/nob/nob.c
-    APP_VERSION="\$VERSION" ./tools/nob/nob debug -std=\$c_standard
-    mv ./build/debug/main ./build/debug/\$name-DEBUG-\$VERSION
-    ./build/debug/\$name-DEBUG-\$VERSION
+    APP_VERSION="\$VERSION" ./tools/nob/nob debug \${nob_extra_flags[*]}
+    mv ./build/debug/main ./build/debug/\$project_name-DEBUG-\$VERSION-\$git_head_hash_short
+    ./build/debug/\$project_name-DEBUG-\$VERSION-\$git_head_hash_short
+
 }
 
 build_tests() {
     printf "Compiling tests (%s)...\n" "\$VERSION"
     cc -o ./tools/nob/nob ./tools/nob/nob.c
-    APP_VERSION="\$VERSION" ./tools/nob/nob test -std=\$c_standard
-    mv ./build/tests/main ./build/tests/\$name-TEST-\$VERSION
-    ./build/tests/\$name-TEST-\$VERSION
+    APP_VERSION="\$VERSION" ./tools/nob/nob test \${nob_extra_flags[*]}
+    mv ./build/tests/main ./build/tests/\$project_name-TEST-\$VERSION-\$git_head_hash_short
+    ./build/tests/\$project_name-TEST-\$VERSION-\$git_head_hash_short
 }
 
 tag() {
@@ -191,7 +218,7 @@ restore() {
 
 help() {
     printf "\\n"
-    printf "Project name     :  \$name\\n"
+    printf "Project name     :  \$project_name\\n"
     printf "Current version  :  \$VERSION\\n"
     printf "Latest commit    :  \$latest_git_commit\\n"
     printf "First created    :  $(date +"%d %b %Y")\\n"
@@ -356,21 +383,18 @@ int main(int argc, char **argv) {
     nob_cc(&cmd);
     nob_cc_flags(&cmd);
 
-    for (int i = 1; i < argc - 1; ++i) {
+    for (int i = 1; i < argc; ++i) {
         if (strcmp(argv[i], "debug") == 0) {
             debug = true;
         } else if (strcmp(argv[i], "release") == 0) {
             release = true;
         } else if (strcmp(argv[i], "test") == 0) {
             test = true;
-        } else {
-            nob_log(NOB_ERROR, "Unknown option: %s", argv[i]);
-            return 1;
+        } else if (i > 1) {
+            // load user flags from run script
+            nob_cmd_append(&cmd, argv[i]);
         }
     }
-
-    const char *std = argv[argc - 1];
-    nob_cmd_append(&cmd, std);
 
     if (debug || test) {
         nob_cmd_append(&cmd, "-g", "-O0", "-DDEBUG", "-fsanitize=address",
@@ -455,13 +479,8 @@ mv main ./jobb/jobb
 mv jobb.zip ./jobb/jobb-src_$current_date.zip
 
 # generate main.h
-mkdir -p "$target_dir/src"; touch "$target_dir/src/main.h"
-cat > "$target_dir/src/main.h" <<EOF
-// program variables
-#define PRG_N "$name"
-#define PRG_V "0.1.0"
-#define PRG_L "Copyright © $(date +"%Y") Simon Danielsson"
-#define PRG_R "https://github.com/simon-danielsson/$name"
+mkdir -p "$target_dir/src"; touch "$target_dir/src/env.h"
+cat > "$target_dir/src/env.h" <<EOF
 
 // libraries
 #define ANALIB_IMPLEMENTATION
@@ -477,16 +496,38 @@ cat > "$target_dir/src/main.h" <<EOF
 
 // diagnostics
 #pragma GCC diagnostic ignored "-Wunused-variable"
+
+// define environment variables with fallbacks
+// (these are overridden and expanded at compile-time)
+#ifndef ENV_NAME // project name
+#define ENV_NAME "UNDEFINED"
+#endif
+#ifndef ENV_AUTHOR // author of this project
+#define ENV_AUTHOR "UNDEFINED"
+#endif
+#ifndef ENV_CONTACT // contact info to author
+#define ENV_CONTACT "UNDEFINED"
+#endif
+#ifndef ENV_GITHASH // git hash
+#define ENV_GITHASH "UNDEFINED"
+#endif
+#ifndef ENV_GITVERSION // git release version
+#define ENV_GITVERSION "UNDEFINED"
+#endif
+#ifndef ENV_REPO // link to git repo
+#define ENV_REPO "UNDEFINED"
+#endif
+
 EOF
 
 # generate main.c
 mkdir -p "$target_dir/src"; touch "$target_dir/src/main.c"
 cat > "$target_dir/src/main.c" <<EOF
-#include "main.h"
+#include "env.h"
 
 // TODO: write a program
 int main(void) {
-    printf("Hello world!");
+    printf("Hello, %s!", ENV_AUTHOR);
     return 0;
 }
 EOF
@@ -494,7 +535,7 @@ EOF
 # generate tests folder
 mkdir -p "$target_dir/tests"; touch "$target_dir/tests/test_main.c"
 cat > "$target_dir/tests/test_main.c" <<EOF
-#include "../src/main.h"
+#include "../src/env.h"
 
 // TODO: write a test
 int main(void) {
@@ -520,6 +561,7 @@ cd "$target_dir"; touch "$target_dir/.gitignore"
 cat > "$target_dir/.gitignore" <<EOF
 build.sh
 nob/nob
+nvim.log
 /build
 /build/*
 .DS_Store
