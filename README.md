@@ -1,7 +1,7 @@
-<h2 align="center">
-  <em>cenv</em>
-</h2>
-  
+<p align="center">
+    <img src="media/logo.png" alt="cenv" width="200"/>
+</p>
+
 <p align="center">
   <em>C project generator and<br>development suite.</em>
 </p>
