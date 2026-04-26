@@ -15,6 +15,7 @@
   <a href="#info">Info</a> •
   <a href="#install">Install</a> •
   <a href="#usage">Usage</a> •
+  <a href="#toolkit">Toolkit</a> •
   <a href="#license">License</a>
 </p>  
   
@@ -77,7 +78,6 @@ cenv help
 When you run `cenv help` you will see the following commands:
 
 ``` terminal
-
 cenv debug
 │ compile into and run from './build/debug' with debug options
 ╰ if 'cenv' is ran without flags, it defaults to the debug build
@@ -103,9 +103,65 @@ cenv restore
 cenv tag <version>
 │ (git) create new annotated tag
 ╰ ex.: run tag v1.2.1
-
 ```
- 
+  
+---
+<div id="toolkit"></div>
+  
+## Toolkit
+    
+### cenv doc
+  
+cenv comes bundled with its own documentation parser that generates a static webpage you can browse, similar to the 'cargo doc' system from Rust. The syntax is simple to understand and is explained within the following example code.
+  
+``` c
+//! Math utilities
+//!
+//! Simple utilities for calculating numbers.
+//! 
+//! A good practice is to give every file in your project a header
+//! like this one. 
+//! <--- "//!" is the syntax used for file headers.
+//! 
+//! @important This is the file header comment.
+
+// There are three tags you can use to spice up your documentation apart from
+// headers and comments: @important, @param and @return. 
+// 
+// These tags are not bound to any specific rule or syntax, so you can 
+// place whatever text you want after them - you can use as many tags as you 
+// want in a single piece of documentation, with the caveat that they can not
+// be multi-line.
+// The cenv parser doesn't care where the tags are so you can place a...
+// @important hello
+// ...tag anywhere and it will work the same as placing tags at the end or
+// grouping tags together.
+
+/// Used for setting factor in submult() function
+#define MULT 5 // only adding a header is fine too
+
+/// sum two integers
+///
+/// @param y int
+/// @param x int
+/// @return sum
+int add(int y, int x) {
+    return y + x;
+}
+
+/// y - x * MULT
+/// The header is always whatever line is at the top,
+/// while the description always comes afterwards.
+/// Note that the header can only be a single line.
+/// <-- "///" is comment syntax used for functions
+/// @param two integers
+/// @important this is only used once
+/// @return sum
+int submult(int y, int x) {
+    return (y - x) * MULT;
+}
+```
+  
 ---
 <div id="license"></div>
 
