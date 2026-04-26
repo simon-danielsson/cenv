@@ -36,11 +36,16 @@ cenv follows the philosophy that everything one needs to build and maintain a C 
 
 ## Usage
   
-Add the init script and the cenv binary as aliases in your `.bashrc`:  
+Add the init script as an alias in your `.bashrc`:  
   
 ``` bash
 # ~/.bashrc
-alias cinit="~/dev/bash/cenv/cenv-init.sh"
+
+# cinit script
+alias cinit="$HOME/path/to/cenv-init.sh"
+
+# this function is to make the cenv build script 
+# easier to run within the generated project 
 cenv() {
   ./cenv "$@"
 }

@@ -229,10 +229,8 @@ help() {
     printf "╰ (./tools/jobb) find 'TODO' statements in codebase\\n"
 
     printf "\${col_cmd}cenv \${col_subc}update\${CR}\\n"
-    printf "│ update libraries\\n"
-    printf "│ *(tool binaries are updated manually to avoid breaking changes\\n"
-    printf "│ screwing up the codebase - this will be solved in the future by\\n"
-    printf "╰ supplying an in-house tooling binary that can be more regulated)\\n"
+    printf "│ update bundled cenv tools and header-only libraries from their\\n"
+    printf "╰ known upstream git sources - user-added dependencies are ignored\\n"
 
     printf "\${col_cmd}cenv \${col_subc}help\${CR}\\n"
     printf "╰ display help\\n"
@@ -240,7 +238,7 @@ help() {
     printf "\\n"
 
     printf "\${col_cmd}cenv \${col_git}restore\${CR}\\n"
-    printf "╰ (git) force hard restore to latest commit\\n"
+    printf "╰ (git) hanges and revert to the latest commit\\n"
 
     printf "\${col_cmd}cenv \${col_git}tag <version>\${CR}\\n"
     printf "│ (git) create new annotated tag\\n"
