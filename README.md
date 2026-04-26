@@ -112,6 +112,10 @@ cenv tag <version>
     
 [cenv toolkit source code](https://github.com/simon-danielsson/cenv_toolkit)
 
+### cenv todo
+  
+This is a search utility, but don't be mistaken! It cannot be compared to tools such as grep and ripgrep due to it only being optimized for finding 'TODO' statements in codebases - but its very good at it! 'cenv todo' returns a formatted list of all 'TODO' statements found, each with a reference to file and line number. In addition to this, 'cenv todo' collects entire 'TODO' paragraphs, not just lines.
+  
 ### cenv doc
   
 cenv comes bundled with its own auto-documentation tool that generates a static html page you can browse, similar to the 'cargo doc' system from Rust. The syntax is simple to understand and is explained within the following example code.
