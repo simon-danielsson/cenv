@@ -24,7 +24,7 @@
 
 ## Info
   
-The main philosophy of cenv is that **everything required to build and maintain a C project should exist within the codebase itself**. It is an *opinionated* development environment built for developing small/medium sized C projects *fast* and *iteratively*.
+cenv assumes that **everything required to build and maintain a C project should live within the codebase itself**. It is an *opinionated* development environment built for developing small to medium sized C projects.
   
 Prerequisites:  
 - git  
@@ -80,7 +80,7 @@ When you run `cenv help` you will see the following commands:
 ``` terminal
 cenv debug
 │ compile into and run from './build/debug' with debug options
-╰ if 'cenv' is ran without flags, it defaults to the debug build
+╰ default command
 cenv release
 ╰ compile into and run from './build/release' with optimizations
 cenv test
@@ -110,7 +110,7 @@ cenv tag <version>
   
 ## Toolkit
     
-[source code for the cenv toolkit can be found here](https://github.com/simon-danielsson/cenv_toolkit)
+[cenv toolkit source code](https://github.com/simon-danielsson/cenv_toolkit)
 
 ### cenv doc
   
@@ -138,6 +138,11 @@ cenv comes bundled with its own auto-documentation tool that generates a static 
 // @important hello
 // ...tag anywhere and it will work the same as placing tags at the end or
 // grouping tags together.
+
+// cenv is not using the standard "//" or "/**/" comments as doc comments 
+// so that you, as the programmer, can be explicit about which comments you
+// want to use as documentation and which should be used internally only
+
 
 /// Used for setting factor in submult() function
 #define MULT 5 // only adding a header is fine too

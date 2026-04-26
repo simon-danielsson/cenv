@@ -242,7 +242,7 @@ help() {
 
     printf "\${col_cmd}cenv \${col_flag}debug\${CR}\\n"
     printf "│ compile into and run from './build/debug' with debug options\\n"
-    printf "╰ if 'cenv' is ran without flags, it defaults to the debug build\\n"
+    printf "╰ default command\\n"
 
     printf "\${col_cmd}cenv \${col_flag}release\${CR}\\n"
     printf "╰ compile into and run from './build/release' with optimizations\\n"
