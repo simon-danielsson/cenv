@@ -35,6 +35,10 @@ Prerequisites:
 > 2. Since cenv is heavily opinionated and built for my own specific workflow, I can't
 > guarantee that this will function properly on your computer.
   
+cenv relies on [nob.h](https://github.com/tsoding/nob.h) (a header-only
+build-system) for compilation.  
+  
+
 
 ---
 <div id="install"></div>
