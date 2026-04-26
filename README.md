@@ -23,9 +23,7 @@
 
 ## Info
   
-**cenv is an opinionated C project environment built for fast and iterative workflows.**
-  
-Everything required to build and maintain a C project exists within the codebase itself.
+The main philosophy of cenv is that everything required to build and maintain a C project should exist within the codebase itself. It is an opinionated C project environment built for fast and iterative workflows. 
   
 Prerequisites:  
 - git  
@@ -73,7 +71,7 @@ cenv help
  
 When you run `cenv help` you will see the following commands:
 
-``` bash
+``` terminal
 
 cenv debug
 │ compile into and run from './build/debug' with debug options
