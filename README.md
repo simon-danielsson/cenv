@@ -32,9 +32,8 @@ Prerequisites:
 - a C compiler  
   
 > [!IMPORTANT]  
-> 1. No support for Windows.
-> 2. Linux builds "should" work but it's a bit experimental right now.
-> 3. Since cenv is heavily opinionated and built for my own specific workflow, I can't
+> 1. No support for Windows. Only unix systems.
+> 2. Since cenv is heavily opinionated and built for my own specific workflow, I can't
 > guarantee that this will function properly on your computer (or be enjoyable
 > to use.)
   

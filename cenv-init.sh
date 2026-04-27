@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # cenv
-  cenv_v="v0.3.0"
+  cenv_v="v0.3.1"
 #
 # Copyright © 2026 Simon Danielsson
 #
