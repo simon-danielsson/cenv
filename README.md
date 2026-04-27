@@ -1,10 +1,6 @@
 <p align="center">
     <img src="media/logo.png" alt="cenv" width="200"/>
 </p>
-
-<p align="center">
-  <em>C without ceremony.</em>
-</p>
   
 <p align="center">
     <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="MIT License" />
@@ -24,7 +20,7 @@
 
 ## Info
   
-cenv assumes that **everything required to build and maintain a C project should live within the codebase itself**. It is an *opinionated* development environment built for developing small to medium sized C projects.
+cenv assumes that everything required to build and maintain a C project should live within the codebase itself. It is an *opinionated* development environment built for developing small to medium sized C projects.
   
 Prerequisites:  
 - git  
