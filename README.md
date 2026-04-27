@@ -100,6 +100,8 @@ cenv todo
 cenv update
 │ update bundled cenv tools and header-only libraries from their
 ╰ known upstream git sources - user-added dependencies are safely ignored
+cenv tidy
+╰ clean up log, html, debug and object files
 cenv help
 ╰ display help
 

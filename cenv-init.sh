@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # cenv
-  cenv_v="v0.3.1"
+  cenv_v="v0.3.2"
 #
 # Copyright © 2026 Simon Danielsson
 #
@@ -82,6 +82,8 @@ project_repo="https://github.com/simon-danielsson/\$project_name"
 author="Simon_Danielsson"
 author_contact="contact@simondanielsson.se"
 c_standard="gnu23"
+
+root="$target_dir"
 
 # =============================================================================
 # CODE
@@ -229,6 +231,21 @@ restore() {
     git clean -fdx
 }
 
+tidy() {
+    printf "Tidying up codebase...\\n"
+    find . -type f \\( \
+        -name ".DS_Store" -o \
+        -name "nvim.log" -o \
+        -name "*.o" -o \
+        -name "*.obj" -o \
+        -name "a.out" \
+        \\) -print -delete
+
+    find ./tools/cenv_toolkit -type f -name "*.html" -print -delete
+    find ./build/debug ./build/tests -type d -name "main.dSYM" -print -exec rm -rf {} +
+    printf "Done!\\n"
+}
+
 help() {
     printf "\\n"
     printf "Project name     :  \$project_name\\n"
@@ -262,6 +279,9 @@ help() {
     printf "\${col_cmd}cenv \${col_subc}update\${CR}\\n"
     printf "│ update bundled cenv tools and header-only libraries from their\\n"
     printf "╰ known upstream git sources - user-added dependencies are safely ignored\\n"
+
+    printf "\${col_cmd}cenv \${col_subc}tidy\${CR}\\n"
+    printf "╰ clean up log, html, debug and object files\\n"
 
     printf "\${col_cmd}cenv \${col_subc}help\${CR}\\n"
     printf "╰ display help\\n"
@@ -305,6 +325,21 @@ else
       ;;
     restore)
       restore
+      ;;
+    tidy)
+      printf "\\n\${col_flag}The following files will be found and cleaned:\\n"
+      printf ".DS_Store\\nnvim.log\\n*.o\\n*.obj\\na.out\\n*.html\\nmain.dSYM\${CR}\\n\\n"
+      printf "Are you sure you want to tidy?\\n[y/n]: "
+      read -r confirm
+
+      case "\$confirm" in
+        [yY]|[yY][eE][sS])
+          tidy
+          ;;
+        *)
+          echo "Tidy cancelled."
+          ;;
+      esac
       ;;
     update)
       printf "\\n\${col_flag}You're about to run an update which can break\\n"
