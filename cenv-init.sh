@@ -220,7 +220,6 @@ update() {
     printf "\\n\${col_scs}'cenv_toolkit' was updated successfully!\${CR}\\n"
     cd \$root_dir
 
-    update_header_only_lib "stb_sprintf.h" "./libs" "https://raw.githubusercontent.com/nothings/stb/refs/heads/master/stb_sprintf.h"
     update_header_only_lib "analib.h" "./libs" "https://raw.githubusercontent.com/simon-danielsson/analib.h/refs/heads/main/analib.h"
     update_header_only_lib "nob.h" "./tools/nob" "https://raw.githubusercontent.com/tsoding/nob.h/refs/heads/main/nob.h"
 }
@@ -472,11 +471,11 @@ curl -O https://raw.githubusercontent.com/simon-danielsson/analib.h/refs/heads/m
     error "Failed to curl from the analib.h github repo"
 }
 
-# get latest version of stb_sprintf.h from repo
-mkdir -p "$target_dir/libs"; cd "$target_dir/libs"
-curl -O https://raw.githubusercontent.com/nothings/stb/refs/heads/master/stb_sprintf.h || {
-    error "Failed to curl from the stb_sprintf.h github repo"
-}
+# # get latest version of stb_sprintf.h from repo
+# mkdir -p "$target_dir/libs"; cd "$target_dir/libs"
+# curl -O https://raw.githubusercontent.com/nothings/stb/refs/heads/master/stb_sprintf.h || {
+#     error "Failed to curl from the stb_sprintf.h github repo"
+# }
 
 # get latest version of cenv_toolkit from repo
 cd "$target_dir/tools"
@@ -499,8 +498,6 @@ cat > "$target_dir/src/env.h" <<EOF
 // libraries
 #define ANALIB_IMPLEMENTATION
 #include "../libs/analib.h"
-#define STB_SPRINTF_IMPLEMENTATION
-#include "../libs/stb_sprintf.h"
 
 // standard libraries
 #include <stdio.h>
