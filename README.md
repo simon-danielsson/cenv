@@ -19,38 +19,24 @@
   
 cenv assumes that everything required to build and maintain a C project should live within the codebase itself. It is an *opinionated* development environment built for developing small to medium sized C projects.
   
-Prerequisites:  
-- git  
-- curl  
-- a C compiler  
-  
 > [!IMPORTANT]  
 > 1. No support for Windows. Only unix systems.
 > 2. Since cenv is heavily opinionated and built for my own specific workflow, I can't
 > guarantee that this will function properly on your computer (or be enjoyable
 > to use.)
   
-cenv relies on [nob.h](https://github.com/tsoding/nob.h) (a header-only
-build-system) for compilation.  
-  
 ---
 <div id="install"></div>
 
 ## Install
   
-[cenv-init.sh](./cenv-init.sh) is what you will be using to build new cenv projects - add it as an alias in your `.bashrc`:  
+There is no installation in the traditional sense. Just add these two functions
+in your .bashrc or an equivalent file.
   
 ``` bash
-# ~/.bashrc
-
-# cinit script
-alias cinit="$HOME/path/to/cenv-init.sh"
-
-# this function lets you launch cenv from anywhere
-# within your cenv project folder (assuming you have
-# a .gitignore in its root)
 cenv() {
     local dir="$(pwd)"
+
     while [[ "$dir" != "/" ]]; do
         if [[ -f "$dir/cenv" ]]; then
             (cd "$dir" && ./cenv "$@")
@@ -58,8 +44,17 @@ cenv() {
         fi
         dir="$(dirname "$dir")"
     done
-    echo "cenv: no project root found" >&2
+
+    echo "no project root found" >&2
     return 1
+}
+cinit() {
+    curl -O https://raw.githubusercontent.com/simon-danielsson/cenv/refs/heads/main/cenv-init.sh || {
+        error "failed to curl cenv-init.sh"
+    }
+    chmod +x ./cenv-init.sh
+    ./cenv-init.sh $1
+    rm cenv-init.sh
 }
 ```
   

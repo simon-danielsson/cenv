@@ -310,7 +310,6 @@ touch "$target_dir/README.md"; echo "## $name" >> "$target_dir/README.md"
 mkdir -p "$target_dir/tools/nob"; cd "$target_dir/tools/nob"
 curl -O https://raw.githubusercontent.com/tsoding/nob.h/refs/heads/main/nob.h || {
     error "Failed to curl nob.h from the nob.h github repo"
-mkdir
 }
 
 # generate nob.c
