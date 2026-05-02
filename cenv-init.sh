@@ -230,7 +230,7 @@ help() {
     printf "╰ this command is still in the experimental stage\n"
 
     printf "\${col_cmd}cenv \${col_subc}tidy\${CR}\\n"
-    printf "╰ clean up log, html, debug and object files\\n"
+    printf "╰ clean up log, debug and object files\\n"
 
     printf "\${col_cmd}cenv \${col_subc}help\${CR}\\n"
     printf "╰ display help\\n"
