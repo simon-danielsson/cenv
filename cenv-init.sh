@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # cenv
-  cenv_v="v0.3.2"
+  cenv_v="v0.4.0"
 #
 # Copyright © 2026 Simon Danielsson
 #
@@ -24,7 +24,7 @@
 # IN THE SOFTWARE.
 #
 
-set -e
+set -xe
 
 error() {
     echo "[ERROR] - $1"; exit 1
@@ -74,22 +74,34 @@ cat > "$target_dir/cenv" <<EOF
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
-# =============================================================================
-# ENVIRONMENT VARIABLES (avoid spaces inside values)
+# env variables ----------------------------------------------------------------
 
 project_name="$name"
 project_repo="https://github.com/simon-danielsson/\$project_name"
-author="Simon_Danielsson"
+author="Simon Danielsson"
 author_contact="contact@simondanielsson.se"
 c_standard="gnu23"
 
 root="$target_dir"
 
-# =============================================================================
-# CODE
+c_flags_test=(
+    "-std=$c_version" "-g" "-O0" "-DDEBUG" "-fsanitize=address"
+    "-Wall" "-Wextra" "-Wpedantic" "-Wshadow" "-Werror=format-security"
+)
 
-SCRIPT_DIR="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
-cd "\$SCRIPT_DIR"
+c_flags_debug=(
+    "-std=$c_version" "-g" "-O0" "-DDEBUG" "-fsanitize=address" "-Wall"
+    "-Wextra" "-Wpedantic" "-Wshadow" "-Werror=format-security"
+)
+
+c_flags_release=(
+    "-O2" "-DNDEBUG" "-Wextra"
+)
+
+# code -------------------------------------------------------------------------
+
+root="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
+cd "\$root"
 
 mkdir -p build
 mkdir -p build/release
@@ -120,115 +132,60 @@ get_version() {
 VERSION="\$(get_version)"
 
 nob_extra_flags=(
-  "-DENV_GITHASH=\"\${git_head_hash_long}\""
-  "-DENV_GITVERSION=\"\${VERSION}\""
-  "-DENV_NAME=\"\${project_name}\""
-  "-DENV_AUTHOR=\"\${author}\""
-  "-DENV_CONTACT=\"\${author_contact}\""
-  "-DENV_REPO=\"\${project_repo}\""
-  "-std=\${c_standard}"
+    "-DENV_GITHASH=\"\${git_head_hash_long}\""
+    "-DENV_GITTAG=\"\${VERSION}\""
+    "-DENV_NAME=\"\${project_name}\""
+    "-DENV_AUTHOR=\"\${author}\""
+    "-DENV_CONTACT=\"\${author_contact}\""
+    "-DENV_REPO=\"\${project_repo}\""
+    "-std=\${c_standard}"
 )
 
-build_release() {
-    printf "Compiling release build (%s)...\\n" "\$VERSION"
-    cc -o ./tools/nob/nob ./tools/nob/nob.c
-    APP_VERSION="\$VERSION" ./tools/nob/nob release \${nob_extra_flags[*]}
-    mv ./build/release/main ./build/release/\$project_name-\$VERSION-\$git_head_hash_short
-    ./build/release/\$project_name-\$VERSION-\$git_head_hash_short
-}
-
+debug_dir="\$root/build/debug"; mkdir -p \$debug_dir
 build_debug() {
-    printf "Compiling debug build (%s)...\n" "\$VERSION"
-    cc -o ./tools/nob/nob ./tools/nob/nob.c
-    APP_VERSION="\$VERSION" ./tools/nob/nob debug \${nob_extra_flags[*]}
-    mv ./build/debug/main ./build/debug/\$project_name-DEBUG-\$VERSION-\$git_head_hash_short
-    ./build/debug/\$project_name-DEBUG-\$VERSION-\$git_head_hash_short
-
+    cd "\$root/tools/nob/" || return 1
+    cc nob.c -o nob || return 1
+    local c_flags=(
+        "\${c_flags_debug[@]}"
+        "\${nob_extra_flags[@]}"
+        )
+    APP_VERSION="\$VERSION" ./nob "\$root/src" "\${c_flags[@]}" || return 1
+    bin_name="\$project_name-\$VERSION-debug-\$git_head_hash_short"
+    mv main "\$debug_dir/\$bin_name" || return 1
+    "\$debug_dir/\$bin_name"
 }
 
+test_dir="\$root/build/test"; mkdir -p \$test_dir
 build_tests() {
-    printf "Compiling tests (%s)...\n" "\$VERSION"
-    cc -o ./tools/nob/nob ./tools/nob/nob.c
-    APP_VERSION="\$VERSION" ./tools/nob/nob test \${nob_extra_flags[*]}
-    mv ./build/tests/main ./build/tests/\$project_name-TEST-\$VERSION-\$git_head_hash_short
-    ./build/tests/\$project_name-TEST-\$VERSION-\$git_head_hash_short
+    cd "\$root/tools/nob/" || return 1
+    cc nob.c -o nob || return 1
+    local c_flags=(
+        "\${c_flags_test[@]}"
+        "\${nob_extra_flags[@]}"
+        )
+    APP_VERSION="\$VERSION" ./nob "\$root/tests" "\${c_flags[@]}" || return 1
+    bin_name="\$project_name-\$VERSION-test-\$git_head_hash_short"
+    mv main "\$test_dir/\$bin_name" || return 1
+    "\$test_dir/\$bin_name"
 }
 
-tag() {
-    if [ -z "\$1" ]; then
-        echo "Usage: tag <version>"
-        return 1
-    fi
-    git tag -a "\$1" -m "\$1"
-}
-
-todo() {
-    ./tools/jobb/jobb ./src
-    ./tools/jobb/jobb ./tests
+release_dir="\$root/build/release"; mkdir -p \$release_dir
+build_release() {
+    cd "\$root/tools/nob/" || return 1
+    cc nob.c -o nob || return 1
+    local c_flags=(
+        "\${c_flags_release[@]}"
+        "\${nob_extra_flags[@]}"
+        )
+    APP_VERSION="\$VERSION" ./nob "\$root/src" "\${c_flags[@]}" || return 1
+    bin_name="\$project_name-\$VERSION-release-\$git_head_hash_short"
+    mv main "\$release_dir/\$bin_name" || return 1
+    # "\$release_dir/\$bin_name"
 }
 
 doc() {
-    mkdir -p ./tools/cenv_toolkit/gen
-    ./tools/cenv_toolkit/cenv_toolkit -t . -d ./tools/cenv_toolkit/gen doc
-    gen="./tools/cenv_toolkit/gen/index.html"
-
-    if command -v open >/dev/null 2>&1; then
-        open "\$gen" > /dev/null 2>&1 &
-    elif command -v xdg-open >/dev/null 2>&1; then
-        xdg-open "\$gen" > /dev/null 2>&1 &
-    else
-        echo "No opener found (open or xdg-open)" >&2
-        return 1
-    fi
-}
-
-todo() {
-    ./tools/cenv_toolkit/cenv_toolkit -t ./src -d ./src todo
-    ./tools/cenv_toolkit/cenv_toolkit -t ./tests -d ./tests todo
-}
-
-update_header_only_lib() {
-    lib_name="\$1"; lib_path="\$2"; lib_repo_raw="\$3"; root=\$(pwd)
-    cd "\$lib_path"
-    mv \$lib_name \$lib_name.bak
-    printf "\\nFetching latest version of \$lib_name...\\n"
-    curl -O \$lib_repo_raw || {
-        error "Failed to curl \$lib_name from the \$lib_name github repo"
-    }
-    if [ -f "\$lib_name" ]; then
-        rm \$lib_name.bak
-        printf "\\n\${col_scs}'\$lib_name' was updated successfully!\${CR}\\n"
-    else
-        mv \$lib_name.bak \$lib_name
-        printf "\\n\${col_flag}'\$lib_name' couldn't be updated!\${CR}\\n"
-    fi
-    cd \$root
-}
-
-update() {
-    # update cenv_toolkit
-    root_dir=\$(pwd)
-    cd "./tools"
-    rm -rf cenv_toolkit
-    git clone https://github.com/simon-danielsson/cenv_toolkit
-    \$root_dir/tools/cenv_toolkit/run build_release_for_cenv
-    mv \$root_dir/tools/cenv_toolkit/build/release/* \$root_dir/tools/main
-    cd \$root_dir/tools
-    zip -r cenv_toolkit.zip cenv_toolkit
-    rm -rf cenv_toolkit
-    mkdir -p cenv_toolkit
-    mv main ./cenv_toolkit/cenv_toolkit
-    mv cenv_toolkit.zip ./cenv_toolkit/cenv_toolkit-src_\$current_date.zip
-    printf "\\n\${col_scs}'cenv_toolkit' was updated successfully!\${CR}\\n"
-    cd \$root_dir
-
-    update_header_only_lib "analib.h" "./libs" "https://raw.githubusercontent.com/simon-danielsson/analib.h/refs/heads/main/analib.h"
-    update_header_only_lib "nob.h" "./tools/nob" "https://raw.githubusercontent.com/tsoding/nob.h/refs/heads/main/nob.h"
-}
-
-restore() {
-    git reset --hard HEAD
-    git clean -fdx
+    mkdir -p ./tools/cdok/gen
+    ./tools/cdok/cdok -s ./src -d ./tools/cdok/gen -o
 }
 
 tidy() {
@@ -241,7 +198,6 @@ tidy() {
         -name "a.out" \
         \\) -print -delete
 
-    find ./tools/cenv_toolkit -type f -name "*.html" -print -delete
     find ./build/debug ./build/tests -type d -name "main.dSYM" -print -exec rm -rf {} +
     printf "Done!\\n"
 }
@@ -273,27 +229,12 @@ help() {
     printf "│ auto-generate docs from './src' and open in browser\n"
     printf "╰ this command is still in the experimental stage\n"
 
-    printf "\${col_cmd}cenv \${col_subc}todo\${CR}\\n"
-    printf "╰ find and print all 'TODO' statements in codebase\\n"
-
-    printf "\${col_cmd}cenv \${col_subc}update\${CR}\\n"
-    printf "│ update bundled cenv tools and header-only libraries from their\\n"
-    printf "╰ known upstream git sources - user-added dependencies are safely ignored\\n"
-
     printf "\${col_cmd}cenv \${col_subc}tidy\${CR}\\n"
     printf "╰ clean up log, html, debug and object files\\n"
 
     printf "\${col_cmd}cenv \${col_subc}help\${CR}\\n"
     printf "╰ display help\\n"
 
-    printf "\\n"
-
-    printf "\${col_cmd}cenv \${col_git}restore\${CR}\\n"
-    printf "╰ (git) HARD reset to latest commit\\n"
-
-    printf "\${col_cmd}cenv \${col_git}tag <version>\${CR}\\n"
-    printf "│ (git) create new annotated tag\\n"
-    printf "╰ ex.: run tag v1.2.1\\n"
     printf "\\n"
 }
 
@@ -314,21 +255,12 @@ else
     help)
       help
       ;;
-    todo)
-      todo
-      ;;
-    tag)
-      tag "\$2"
-      ;;
     doc)
       doc
       ;;
-    restore)
-      restore
-      ;;
     tidy)
       printf "\\n\${col_flag}The following files will be found and cleaned:\\n"
-      printf ".DS_Store\\nnvim.log\\n*.o\\n*.obj\\na.out\\n*.html\\nmain.dSYM\${CR}\\n\\n"
+      printf ".DS_Store\\nnvim.log\\n*.o\\n*.obj\\na.out\\nmain.dSYM\${CR}\\n\\n"
       printf "Are you sure you want to tidy?\\n[y/n]: "
       read -r confirm
 
@@ -367,7 +299,6 @@ fi
 
 EOF
 
-# make dev executable
 chmod +x "$target_dir/cenv" || {
     error "Failed to make dev executable"
 }
@@ -385,7 +316,7 @@ mkdir
 # generate nob.c
 touch "$target_dir/tools/nob/nob.c"
 cat > "$target_dir/tools/nob/nob.c" <<EOF
-
+#include <stdio.h>
 #define NOB_IMPLEMENTATION
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 
@@ -393,12 +324,55 @@ cat > "$target_dir/tools/nob/nob.c" <<EOF
 #include <stdlib.h>
 #include <string.h>
 
+#if defined(__APPLE__)
+#include <mach-o/dyld.h>
+#elif defined(__linux__)
+#include <unistd.h>
+#endif
+
+char *get_executable_dir(void) {
+    char path[PATH_MAX];
+    size_t len = 0;
+
+#if defined(__linux__)
+    ssize_t r = readlink("/proc/self/exe", path, sizeof(path) - 1);
+    if (r == -1)
+        return NULL;
+    path[r] = '\\0';
+    len = (size_t)r;
+
+#elif defined(__APPLE__)
+    uint32_t size = sizeof(path);
+    if (_NSGetExecutablePath(path, &size) != 0)
+        return NULL;
+
+    // mac can return a relative path
+    char resolved[PATH_MAX];
+    if (realpath(path, resolved) == NULL)
+        return NULL;
+
+    strncpy(path, resolved, sizeof(path));
+    path[sizeof(path) - 1] = '\\0';
+    len = strlen(path);
+#endif
+
+    // strip filename to get directory
+    for (size_t i = len; i > 0; i--) {
+        if (path[i] == '/') {
+            path[i] = '\\0';
+            break;
+        }
+    }
+
+    return strdup(path); // caller must free
+}
+
 #define BINARY_NAME "main"
 #define RELEASE_FOLDER "./build/release/"
 #define DEBUG_FOLDER "./build/debug/"
 #define TEST_FOLDER "./build/tests/"
-#define SRC_FOLDER "./src"
 #define TEST_SRC_FOLDER "./tests"
+#define SRC_FOLDER "./src"
 
 typedef struct {
     char **items;
@@ -434,55 +408,32 @@ static bool collect_files(Nob_Walk_Entry entry) {
 int main(int argc, char **argv) {
     NOB_GO_REBUILD_URSELF(argc, argv);
 
-    bool debug = false;
-    bool release = false;
-    bool test = false;
-
     Nob_Cmd cmd = {0};
 
     nob_cc(&cmd);
     nob_cc_flags(&cmd);
 
-    for (int i = 1; i < argc; ++i) {
-        if (strcmp(argv[i], "debug") == 0) {
-            debug = true;
-        } else if (strcmp(argv[i], "release") == 0) {
-            release = true;
-        } else if (strcmp(argv[i], "test") == 0) {
-            test = true;
-        } else if (i > 1) {
-            // load user flags from cenv script
-            nob_cmd_append(&cmd, argv[i]);
-        }
+    // arg 1: source dir
+    // everything after: flags
+
+    // append flags
+    for (int i = 2; i < argc; ++i) {
+        nob_cmd_append(&cmd, argv[i]);
     }
 
-    if (debug || test) {
-        nob_cmd_append(&cmd, "-g", "-O0", "-DDEBUG", "-fsanitize=address",
-                "-Wall", "-Wextra", "-Wpedantic",
-                "-Wshadow", "-Werror=format-security");
+    // build binary into in nob folder
+    char target_bin[PATH_MAX];
+    char *nob_dir = get_executable_dir();
+    if (!nob_dir) {
+        fprintf(stderr, "failed to get executable dir\\n");
+        exit(1);
     }
-
-    if (debug) {
-        nob_cmd_append(&cmd, "-o", DEBUG_FOLDER BINARY_NAME);
-    }
-
-    if (test) {
-        nob_cmd_append(&cmd, "-o", TEST_FOLDER BINARY_NAME);
-    }
-
-    if (release) {
-        nob_cmd_append(&cmd, "-O2", "-DNDEBUG", "-Wextra");
-        nob_cmd_append(&cmd, "-o", RELEASE_FOLDER BINARY_NAME);
-    }
+    snprintf(target_bin, sizeof target_bin, "%s/main", nob_dir);
+    nob_cmd_append(&cmd, "-o", target_bin);
 
     Path_List files = {0};
-    if (test) {
-        nob_walk_dir(TEST_SRC_FOLDER, collect_files, &files);
-    }
 
-    if (debug || release) {
-        nob_walk_dir(SRC_FOLDER, collect_files, &files);
-    }
+    nob_walk_dir(argv[1], collect_files, &files);
 
     for (size_t i = 0; i < files.count; i++) {
         nob_cmd_append(&cmd, files.items[i]);
@@ -494,45 +445,41 @@ int main(int argc, char **argv) {
     for (size_t i = 0; i < files.count; i++) {
         free(files.items[i]);
     }
+    free(nob_dir);
     free(files.items);
 
     return 0;
 }
+
 EOF
 
 # get latest version of analib.h from repo
 mkdir -p "$target_dir/libs"; cd "$target_dir/libs"
-curl -O https://raw.githubusercontent.com/simon-danielsson/analib.h/refs/heads/main/analib.h || {
-    error "Failed to curl from the analib.h github repo"
+curl -O https://raw.githubusercontent.com/simon-danielsson/ana.h/refs/heads/main/ana.h || {
+    error "Failed to curl from the ana.h github repo"
 }
-
-# # get latest version of stb_sprintf.h from repo
-# mkdir -p "$target_dir/libs"; cd "$target_dir/libs"
-# curl -O https://raw.githubusercontent.com/nothings/stb/refs/heads/master/stb_sprintf.h || {
-#     error "Failed to curl from the stb_sprintf.h github repo"
-# }
 
 # get latest version of cenv_toolkit from repo
 cd "$target_dir/tools"
-git clone --depth 1 https://github.com/simon-danielsson/cenv_toolkit
-cd cenv_toolkit
+git clone --depth 1 https://github.com/simon-danielsson/cdok
+cd cdok
 printf "building...\n"
-./run build_release_for_cenv
-mv ./build/release/* $target_dir/tools/main
+./run release
+mv ./build/release/cdok "$target_dir/tools/cdok_bin"
 cd "$target_dir/tools"
-zip -r cenv_toolkit.zip cenv_toolkit
-rm -rf cenv_toolkit
-mkdir -p cenv_toolkit
-mv main ./cenv_toolkit/cenv_toolkit
-mv cenv_toolkit.zip ./cenv_toolkit/cenv_toolkit-src_$current_date.zip
+zip -r cdok.zip cdok
+rm -rf cdok
+mkdir -p cdok
+mv cdok_bin ./cdok/cdok
+mv cdok.zip ./cdok/cdok-src_$current_date.zip
 
-# generate main.h
+# generate env.h
 mkdir -p "$target_dir/src"; touch "$target_dir/src/env.h"
 cat > "$target_dir/src/env.h" <<EOF
 
 // libraries
 #define ANALIB_IMPLEMENTATION
-#include "../libs/analib.h"
+#include "../libs/ana.h"
 
 // standard libraries
 #include <stdio.h>
@@ -557,8 +504,8 @@ cat > "$target_dir/src/env.h" <<EOF
 #ifndef ENV_GITHASH // git hash
 #define ENV_GITHASH "UNDEFINED"
 #endif
-#ifndef ENV_GITVERSION // git release version
-#define ENV_GITVERSION "UNDEFINED"
+#ifndef ENV_GITTAG // git release version
+#define ENV_GITTAG "UNDEFINED"
 #endif
 #ifndef ENV_REPO // link to git repo
 #define ENV_REPO "UNDEFINED"
@@ -607,8 +554,8 @@ EOF
 cd "$target_dir"; touch "$target_dir/.gitignore"
 cat > "$target_dir/.gitignore" <<EOF
 build.sh
-/tools/cenv_toolkit/gen
-/tools/cenv_toolkit/gen/*
+/tools/cdok/gen
+/tools/cdok/gen/*
 /tools/nob/nob
 nvim.log
 /build
@@ -620,6 +567,8 @@ git init -b main
 git add --all
 git commit -m "init"
 git tag v0.1.0
+
+set +x
 
 col_grn="\\033[1;32m"   # bold blue
 col_rst="\\033[0m"      # reset
