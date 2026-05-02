@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # cenv
-  cenv_v="v0.4.0"
+  cenv_v="v0.4.1"
 #
 # Copyright © 2026 Simon Danielsson
 #
@@ -454,7 +454,7 @@ int main(int argc, char **argv) {
 EOF
 
 # get latest version of analib.h from repo
-mkdir -p "$target_dir/libs"; cd "$target_dir/libs"
+mkdir -p "$target_dir/src/libs"; cd "$target_dir/src/libs"
 curl -O https://raw.githubusercontent.com/simon-danielsson/ana.h/refs/heads/main/ana.h || {
     error "Failed to curl from the ana.h github repo"
 }
@@ -479,7 +479,7 @@ cat > "$target_dir/src/env.h" <<EOF
 
 // libraries
 #define ANALIB_IMPLEMENTATION
-#include "../libs/ana.h"
+#include "./libs/ana.h"
 
 // standard libraries
 #include <stdio.h>
